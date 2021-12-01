@@ -77,6 +77,8 @@ class ADC(PCF8591.PCF8591):
     pass
 
 def setup():
+    print("INITIATING SETUP")
     pwm=PCA9685.PWM(bus_number=1)
     pwm.setup()
     pwm.frequency = 60
+    print("SETUP COMPLETED")

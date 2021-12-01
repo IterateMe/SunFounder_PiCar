@@ -23,7 +23,7 @@ class Back_Wheels(object):
 
 	PWM_A = 4
 	PWM_B = 5
-
+	
 	_DEBUG = False
 	_DEBUG_INFO = 'DEBUG "back_wheels.py":'
 
@@ -53,6 +53,8 @@ class Back_Wheels(object):
 		self.right_wheel.pwm = _set_b_pwm
 
 		self._speed = 0
+		self._offsetSpeed_A = 0
+		self._offsetSpeed_B = 0
 
 		self.debug = debug
 		self._debug_('Set left wheel to #%d, PWM channel to %d' % (self.Motor_A, self.PWM_A))
@@ -61,6 +63,14 @@ class Back_Wheels(object):
 	def _debug_(self,message):
 		if self._DEBUG:
 			print(self._DEBUG_INFO,message)
+
+	# Implemente pour le differentiel de propulsion
+	def set_offset_speed(self, offset_A, offset_B):
+		self.offsetSpeed_A = offset_A
+		self.offsetSpeed_B = offset_B
+
+	def get_offset_speed(self):
+		return self.offsetSpeed_A, self.offsetSpeed_B
 
 	def forward(self):
 		''' Move both wheels forward '''
@@ -88,8 +98,8 @@ class Back_Wheels(object):
 	def speed(self, speed):
 		self._speed = speed
 		''' Set moving speeds '''
-		self.left_wheel.speed = self._speed
-		self.right_wheel.speed = self._speed
+		self.left_wheel.speed = self._speed + self._offsetSpeed_A
+		self.right_wheel.speed = self._speed + self._offsetSpeed_B
 		self._debug_('Set speed to %s' % self._speed)
 
 	@property
