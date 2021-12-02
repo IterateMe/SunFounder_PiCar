@@ -65,9 +65,10 @@ class Back_Wheels(object):
 			print(self._DEBUG_INFO,message)
 
 	# Implemente pour le differentiel de propulsion
+
 	def set_offset_speed(self, offset_A, offset_B):
-		self.offsetSpeed_A = offset_A
-		self.offsetSpeed_B = offset_B
+		self._offsetSpeed_A = offset_A
+		self._offsetSpeed_B = offset_B
 
 	def get_offset_speed(self):
 		return self.offsetSpeed_A, self.offsetSpeed_B

@@ -22,44 +22,36 @@ class Vehicule:
         self.avance = True
         self.longueur = 0.14 # metres
         self.dist_centre_roue = 0.054 # metres
+        self.correction_vitesse = [1,0]
 
-    def tourner_avancer(self, speed, deg):
+    def tourner(self, speed, deg, avancer=True):
         # deg va de -45 a +45
-        # Freiner si self.avance = False
+        # Freiner si self.avance != avancer
         fw_angle = deg+90
         self.avance = True
         self._fw.turn(fw_angle)
 
         distal, proximal = self.calcul_offset_vitesse(speed, deg)
-        print ("DISTAL : {}\tPROXIMAL : {}\n".format(distal, proximal))
+        #print ("DISTAL : {}\tPROXIMAL : {}\n".format(distal, proximal))
         if deg >= 0 :
-            self._bw.set_offset_speed(distal, proximal)
+            self._bw.set_offset_speed(distal+correction_vitesse[0], proximal+correction_vitesse[1])
         if deg < 0 :
-            self._bw.set_offset_speed(proximal, distal)
-        
-        self._bw.forward()
+            self._bw.set_offset_speed(proximal+correction_vitesse[0], distal+correction_vitesse[1])
+        if(avancer):
+            self._bw.forward()
+        else:
+            self._bw.backward()
         self._bw.speed = speed
 
-
-    def tourner_reculer(self, speed, deg):
-        self._fw.turn(deg)
-        # Freiner si self.avance = True
-        self.avance = False
-
-    def avancer(self, speed):
+    def tout_droit(self, speed, avancer=True):
         self._fw.turn(90)
         # Freiner si self.avance = False
         self.avance = True
-        self._bw.set_offset_speed(0,0)
-        self._bw.forward()
-        self._bw.speed = speed
-
-    def reculer(self, speed):
-        self._fw.turn(90)
-        # Freiner si self.avance = True
-        self.avance = False
-        self._bw.set_offset_speed(0,0)
-        self._bw.backward()
+        self._bw.set_offset_speed(self.correction_vitesse[0], self.correction_vitesse[1])
+        if(avancer):
+            self._bw.forward()
+        else:
+            self._bw.backward()
         self._bw.speed = speed
 
     def arret(self):
@@ -76,10 +68,3 @@ class Vehicule:
         distal = int(mult * speed)
         proximal = -int(mult * speed)
         return distal, proximal
-
-    # def test_fw(self):
-    #     self._fw.turn(90)
-    #     time.sleep(1)
-    #     self._fw.turn(45)
-    #     time.sleep(1)
-    #     self._fw.turn(45+90)
