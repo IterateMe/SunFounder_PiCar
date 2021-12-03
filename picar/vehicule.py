@@ -17,7 +17,7 @@ import math
 import time
 
 class Vehicule:
-    def __init__(self, lf_ref=[50, 70, 70, 70, 50]):
+    def __init__(self, lf_ref=[114, 170, 180, 180, 125]):
         picar.setup()
         self._fw = front_wheels.Front_Wheels(db='config')
         self._bw = back_wheels.Back_Wheels(db='config')
@@ -94,60 +94,102 @@ class Vehicule:
             self.arret()
 
     def avancer_ligne(self, speed=70, delay=0.005):
-        # previous_lt_status = lf.read_digital()
-        lt_status_now = 0
-        step = 0
-        speed_modifier = 1
+        following_line = True
+        previous_lt_status = self._lf.read_digital()
+        off_track_left = False
+        off_track_right = False
+        lt_status_now = None    # Will be set soon with somthing like [0,0,1,0,0]
+        step = 0    # Set the angle at which the car will turn
+        speed_modifier = 1  # To reduce speed at desired moments (while turning for exemple)
+        line_state = 0 # line is : left=-1    center=0    right=1
         a_step = 3
         b_step = 10
         c_step = 30
         d_step = 45
-        off_track_count = 0
 
-        while True:
+        while following_line:
             lt_status_now = self._lf.read_digital()
             print(lt_status_now)
 
-            # Angle calculate
-            if	lt_status_now == [0,0,1,0,0]:
-                speed_modifier = 1
-                step = 0	
-            elif lt_status_now == [0,1,1,0,0] or lt_status_now == [0,0,1,1,0]:
-                speed_modifier = 1
-                step = a_step
-            elif lt_status_now == [0,1,0,0,0] or lt_status_now == [0,0,0,1,0]:
-                speed_modifier = 1
-                step = b_step
-            elif lt_status_now == [1,1,0,0,0] or lt_status_now == [0,0,0,1,1]:
-                speed_modifier= 1
-                step = c_step
-            elif lt_status_now == [1,0,0,0,0] or lt_status_now == [0,0,0,0,1]:
+            if off_track_left or off_track_right:
                 speed_modifier = 0.8
-                step = d_step
-            else:
-                speed_modifier = 1
+                if off_track_left:
+                    print("OFF TRACK LEFT")
+                    # Turn right
+                    self.tourner(int(speed*speed_modifier), 45)
+                    # verify if back on track
+                    if lt_status_now in ([0,0,0,1,0],[0,0,0,1,1],[0,0,1,0,0]):
+                        off_track_left = False
+                        off_track_right = False
+                        print("BACK ON TRACK")
 
-            # Direction calculate
-            if lt_status_now == [0,0,1,0,0]:
-                off_track_count = 0
-                self.tout_droit(int(speed*speed_modifier))
-            # stop at the T shaped end
-            if lt_status_now == [1,1,1,1,1]:
-                off_track_count = 0
-                print("STTOOOOOOOOP")
-                self.arret(start=int(speed*speed_modifier))
-                break
-            # turn right
-            elif lt_status_now in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
-                off_track_count = 0
-                self.tourner(int(speed*speed_modifier), -int(step)) 
-            # turn left
-            elif lt_status_now in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
-                off_track_count = 0
-                self.tourner(int(speed*speed_modifier), int(step))
-            else:
-                self.tout_droit(int(speed*speed_modifier))
+                elif off_track_right:
+                    print("OFF TRACK RIGHT")
+                    # Turn left
+                    self.tourner(int(speed*speed_modifier), -45)
+                    # verify if back on track
+                    if lt_status_now in ([0,1,0,0,0],[1,1,0,0,0],[0,0,1,0,0]):
+                        off_track_left = False
+                        off_track_right = False
+                        print("BACK ON TRACK")
 
+            else: # IF ON TRACK
+                # Angle calculate
+                if	lt_status_now == [0,0,1,0,0]:
+                    speed_modifier = 1
+                    step = 0	
+                elif lt_status_now == [0,1,1,0,0] or lt_status_now == [0,0,1,1,0]:
+                    speed_modifier = 1
+                    step = a_step
+                elif lt_status_now == [0,1,0,0,0] or lt_status_now == [0,0,0,1,0]:
+                    speed_modifier = 1
+                    step = b_step
+                elif lt_status_now == [1,1,0,0,0] or lt_status_now == [0,0,0,1,1]:
+                    speed_modifier= 1
+                    step = c_step
+                elif lt_status_now == [1,0,0,0,0] or lt_status_now == [0,0,0,0,1]:
+                    speed_modifier = 0.8
+                    step = d_step
+                elif lt_status_now == [0,0,0,0,0]:  # OFF TRACK
+                    speed_modifier = 0.8
+                    step = d_step
+                else:
+                    speed_modifier = 1
+
+                # Direction calculate
+                if lt_status_now == [0,0,1,0,0]:
+                    line_state = 0
+                    self.tout_droit(int(speed*speed_modifier))
+                # stop at the T shaped end
+                elif lt_status_now == [1,1,1,1,1]:
+                    line_state = 0
+                    print("STTOOOOOOOOP")
+                    self.arret(start=int(speed*speed_modifier))
+                    break
+                # turn right
+                elif lt_status_now in ([0,1,1,0,0],[0,1,0,0,0],[1,1,0,0,0],[1,0,0,0,0]):
+                    line_state = 1
+                    self.tourner(int(speed*speed_modifier), -int(step)) 
+                # turn left
+                elif lt_status_now in ([0,0,1,1,0],[0,0,0,1,0],[0,0,0,1,1],[0,0,0,0,1]):
+                    line_state = -1
+                    self.tourner(int(speed*speed_modifier), int(step))
+                #
+                elif lt_status_now == [0,0,0,0,0]:
+                    self.tourner(int(speed*speed_modifier), int(step)*(-line_state))
+                    print("GOING OFF TRACK")
+                    if line_state == 1:
+                        off_track_right = True
+                    elif line_state == -1:
+                        off_track_left = True
+                    # else:
+                    #     print("ERREUR DE LOGIQUE")
+                    #     self.arret(start=int(speed*speed_modifier))
+                    #     break
+                else:
+                    self.tout_droit(int(speed*speed_modifier))
+
+            previous_lt_status = lt_status_now
             time.sleep(delay)
 
 
@@ -156,8 +198,11 @@ class Vehicule:
         
     def test_lf(self):
         while True:
-            print(self._lf.read_digital())
-            print(self._lf.read_analog())
+            digital = self._lf.read_digital()
+            analog = self._lf.read_analog()
+            diff = analog[2]-analog[1]
+            print(digital)
+            print(analog,"\t{}".format(diff))
             print('')
             time.sleep(0.2)
 
