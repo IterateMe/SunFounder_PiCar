@@ -13,6 +13,7 @@ from .import back_wheels
 from .import front_wheels
 from .import distance_sensor
 from .import line_follower
+#from .import mvt_stack
 import math
 import time
 
@@ -26,12 +27,13 @@ class Vehicule:
         self._lf = line_follower.Suiveur_ligne()
         self._lf.references = lf_ref
         
+        #self._stack = mvt_stack.Mvt_Stack(1000)
         self.avance = True
         self.longueur = 0.14 # metres
         self.dist_centre_roue = 0.054 # metres
         self.correction_vitesse = [1,0]
 
-    def tourner(self, speed, deg, avancer=True):
+    def tourner(self, speed, deg, avancer=True, replay=False):
         # deg va de -45 a +45
         # Freiner si self.avance != avancer
         fw_angle = deg+90
@@ -44,21 +46,21 @@ class Vehicule:
             self._bw.set_offset_speed(distal+self.correction_vitesse[0], proximal+self.correction_vitesse[1])
         if deg < 0 :
             self._bw.set_offset_speed(proximal+self.correction_vitesse[0], distal+self.correction_vitesse[1])
-        if(avancer):
+        if avancer:
             self._bw.forward()
         else:
             self._bw.backward()
         self._bw.speed = speed
+
+        # if not replay:
+        #     self._stack.insert((speed,deg))
 
     def tout_droit(self, speed, avancer=True):
         self.tourner(speed, 0, avancer)
         
 
     def arret(self,start=20,stop=20,delay=0):
-        diff = start-stop
-        for i in range(diff):
-            self.tout_droit(start-i)
-            time.sleep(delay)
+        self.accel(start,stop,delay)
         self._bw.stop()
         self._fw.turn(90)
         self._bw.set_offset_speed(0,0)
@@ -66,7 +68,18 @@ class Vehicule:
     def freiner(self):
         pass
         
-
+    def accel(self,start,stop,delay):
+        diff = stop-start
+        if diff>0:       #acceleration
+            for i in range(diff):
+                self.tout_droit(start+i)
+                time.sleep(delay)
+        elif diff<0:     #Deceleration
+            for i in range(abs(diff)):
+                self.tout_droit(start-i)
+                time.sleep(delay)
+        else:
+            return 0
 
     def calcul_offset_vitesse(self, speed, deg):
         rad = math.radians(abs(deg))
@@ -193,9 +206,11 @@ class Vehicule:
             time.sleep(delay)
 
 
-    def reculer_ligne(self):
-        pass
-        
+    def reculer_ligne(self, max_dist):
+        while self._distance.get_distance() < max_dist-2:
+            self.tout_droit(70,avancer=False)
+        self.arret(start=70)
+
     def test_lf(self):
         while True:
             digital = self._lf.read_digital()
