@@ -1,6 +1,6 @@
 # Semester Projet with PiCar
 All changes made to the original code base are on the Picar folder.  
-- We created a differential in order for the wheels to turn more easily
+- We created a "differential" in order for the back wheels to run with more or less speed depending where the car turned
 - We added a speedometer made with magnets and a hall effect sensor
 - We implemented the logic for the end of semester challenge as a state Design Pattern
 - We tried to use an accelerometer but it didn't worked properly
