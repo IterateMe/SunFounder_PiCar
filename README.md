@@ -1,3 +1,11 @@
+# Semester Projet with PiCar
+All changes made to the original code base are on the Picar folder.  
+- We created a differential in order for the wheels to turn more easily
+- We added a speedometer made with magnets and a hall effect sensor
+- We implemented the logic for the end of semester challenge as a state Design Pattern
+- We tried to use an accelerometer but it didn't worked properly
+- We gathered data from all sensors in order to understand their statistical properties
+
 ## SunFounder PiCar
 SunFounder PiCar
 
