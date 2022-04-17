@@ -4,7 +4,7 @@ All changes made to the original code base are on the Picar folder.
 - We added a speedometer made with magnets and a hall effect sensor
 - We implemented the logic for the end of semester challenge as a state Design Pattern
 - We tried to use an accelerometer but it didn't worked properly
-- We gathered data from all sensors in order to understand their statistical properties
+- We gathered data from all sensors in order to understand their statistical properties and to use them in a simulation (not in this github repo)
 
 ## SunFounder PiCar
 SunFounder PiCar
